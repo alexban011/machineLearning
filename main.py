@@ -1,72 +1,53 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Parametrii zonelor
 zones = [
     {"m_x": -150, "m_y": 150, "sigma_x": 30, "sigma_y": 10, "color": "red"},
     {"m_x": 0, "m_y": 0, "sigma_x": 30, "sigma_y": 50, "color": "blue"},
     {"m_x": 200, "m_y": -150, "sigma_x": 50, "sigma_y": 20, "color": "yellow"}
 ]
 
-PRAG = 0.5
-OUTLIER_RATIO = 0.001
-
 np.random.seed(None)
 
-def G(x, m, sigma):
-    return np.exp(-(m-x)**2 / (2 * sigma**2))
+OUTLIER_RATIO = 0.05
 
-def generate_points_fast(n_points=10000):
-    points = []
+def genereaza_puncte(nr_de_puncte):
+    puncte = []
 
-    while len(points) < n_points:
-        zone = np.random.choice(zones)
+    for _ in range(nr_de_puncte):
+        zona = np.random.choice(zones)
 
-        x_vals = np.random.uniform(-300, 300, n_points)
-        y_vals = np.random.uniform(-300, 300, n_points)
+        # genereaza punct
+        valori_X = np.random.normal(zona["m_x"], zona["sigma_x"], 1)
+        valori_Y = np.random.normal(zona["m_y"], zona["sigma_y"], 1)
 
-        x_accepted = x_vals[G(x_vals, zone["m_x"], zone["sigma_x"]) > PRAG]
-        y_accepted = y_vals[G(y_vals, zone["m_y"], zone["sigma_y"]) > PRAG]
+        puncte.append((valori_X[0], valori_Y[0], zona["color"]))
 
-        combined = list(zip(x_accepted, y_accepted))
-        points.extend([(x[0], x[1], zone["color"]) for x in combined])
+        # accepta puncte noise
+        if np.random.rand() < OUTLIER_RATIO:
+            noise_X = np.random.uniform(-300, 300)
+            noise_Y = np.random.uniform(-300, 300)
+            puncte.append((noise_X, noise_Y, zona["color"]))
 
-    return points[:n_points]
+    return puncte
 
-# Adăugăm outlierii care aparțin zonelor
-def add_zone_outliers(points, n_points=10000):
-    n_outliers = int(n_points * OUTLIER_RATIO)
-    outliers = []
-
-    for zone in zones:
-        outliers.extend([
-            (np.random.uniform(-300, 300), np.random.uniform(-300, 300), zone["color"])
-            for _ in range(n_outliers)
-        ])
-
-    return points + outliers
-
-# Salvarea punctelor în fișier
-def save_to_file(points, filename="points.txt"):
+def salvareFisier(points, filename):
     with open(filename, "w") as file:
         for point in points:
             file.write(f"{point[0]} {point[1]} {point[2]}\n")
 
-# Afișarea punctelor din fișier
-def plot_from_file(filename="points.txt"):
+def genereazaPlot(filename):
     data = np.loadtxt(filename, dtype={'names': ('x', 'y', 'color'), 'formats': ('f8', 'f8', 'U10')})
     x = data['x']
     y = data['y']
     colors = data['color']
 
-    for zone in zones:
-        plt.scatter(x[colors == zone["color"]], y[colors == zone["color"]], color=zone["color"], s=5, marker=',')
+    for zona in zones:
+        plt.scatter(x[colors == zona["color"]], y[colors == zona["color"]], color=zona["color"], s=1, marker=',')
 
-# Generăm punctele, le salvăm și le afișăm
-points = generate_points_fast()
-points_with_outliers = add_zone_outliers(points)
-save_to_file(points_with_outliers)
-plot_from_file()
+points = genereaza_puncte(10000)
+salvareFisier(points, "points.txt")
+genereazaPlot("points.txt")
 
 plt.axvline(0, c='black', ls='-')
 plt.axhline(0, c='black', ls='-')
