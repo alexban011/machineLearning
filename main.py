@@ -9,7 +9,8 @@ zones = [
 
 np.random.seed(None)
 
-OUTLIER_RATIO = 0.05
+prag = 0.05
+
 
 def genereaza_puncte(nr_de_puncte):
     puncte = []
@@ -24,17 +25,19 @@ def genereaza_puncte(nr_de_puncte):
         puncte.append((valori_X[0], valori_Y[0], zona["color"]))
 
         # accepta puncte noise
-        if np.random.rand() < OUTLIER_RATIO:
+        if np.random.rand() < prag:
             noise_X = np.random.uniform(-300, 300)
             noise_Y = np.random.uniform(-300, 300)
             puncte.append((noise_X, noise_Y, zona["color"]))
 
     return puncte
 
+
 def salvareFisier(points, filename):
     with open(filename, "w") as file:
         for point in points:
             file.write(f"{point[0]} {point[1]} {point[2]}\n")
+
 
 def genereazaPlot(filename):
     data = np.loadtxt(filename, dtype={'names': ('x', 'y', 'color'), 'formats': ('f8', 'f8', 'U10')})
@@ -44,6 +47,7 @@ def genereazaPlot(filename):
 
     for zona in zones:
         plt.scatter(x[colors == zona["color"]], y[colors == zona["color"]], color=zona["color"], s=1, marker=',')
+
 
 points = genereaza_puncte(10000)
 salvareFisier(points, "points.txt")
