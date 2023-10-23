@@ -15,7 +15,7 @@ prag = 0.05
 def genereaza_puncte(nr_de_puncte):
     puncte = []
 
-    for _ in range(nr_de_puncte):
+    for i in range(nr_de_puncte):
         zona = np.random.choice(zones)
 
         # genereaza punct
@@ -23,12 +23,14 @@ def genereaza_puncte(nr_de_puncte):
         valori_Y = np.random.normal(zona["m_y"], zona["sigma_y"], 1)
 
         puncte.append((valori_X[0], valori_Y[0], zona["color"]))
+        i = i + 1
 
         # accepta puncte noise
         if np.random.rand() < prag:
             noise_X = np.random.uniform(-300, 300)
             noise_Y = np.random.uniform(-300, 300)
             puncte.append((noise_X, noise_Y, zona["color"]))
+            i = i + 1
 
     return puncte
 
