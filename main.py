@@ -2,14 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 zones = [
-    {"m_x": -150, "m_y": 150, "sigma_x": 30, "sigma_y": 10, "color": "red"},
-    {"m_x": 0, "m_y": 0, "sigma_x": 30, "sigma_y": 50, "color": "blue"},
-    {"m_x": 200, "m_y": -150, "sigma_x": 50, "sigma_y": 20, "color": "yellow"}
+    {"x": -150, "y": 150, "sigma_x": 30, "sigma_y": 10, "color": "red"},
+    {"x": 0, "y": 0, "sigma_x": 30, "sigma_y": 50, "color": "blue"},
+    {"x": 200, "y": -150, "sigma_x": 50, "sigma_y": 20, "color": "yellow"}
 ]
 
 np.random.seed(None)
 
-prag = 0.05
+prag = 0.03
 
 
 def genereaza_puncte(nr_de_puncte):
@@ -19,8 +19,8 @@ def genereaza_puncte(nr_de_puncte):
         zona = np.random.choice(zones)
 
         # genereaza punct
-        valori_X = np.random.normal(zona["m_x"], zona["sigma_x"], 1)
-        valori_Y = np.random.normal(zona["m_y"], zona["sigma_y"], 1)
+        valori_X = np.random.normal(zona["x"], zona["sigma_x"], 1)
+        valori_Y = np.random.normal(zona["y"], zona["sigma_y"], 1)
 
         puncte.append((valori_X[0], valori_Y[0], zona["color"]))
         i = i + 1
