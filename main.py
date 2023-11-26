@@ -1,62 +1,89 @@
-import numpy as np
+import random
+
 import matplotlib.pyplot as plt
-
-zones = [
-    {"x": -150, "y": 150, "sigma_x": 30, "sigma_y": 10, "color": "red"},
-    {"x": 0, "y": 0, "sigma_x": 30, "sigma_y": 50, "color": "blue"},
-    {"x": 200, "y": -150, "sigma_x": 50, "sigma_y": 20, "color": "yellow"}
-]
-
-np.random.seed(None)
-
-prag = 0.05
+import numpy as np
+import pandas as pd
 
 
-def genereaza_puncte(nr_de_puncte):
-    puncte = []
+def k_means(points, k, tol, max_iter):
+    centroids = []
 
-    for i in range(nr_de_puncte):
-        zona = np.random.choice(zones)
+    # Randomly initialize centroids
+    random_points = random.sample(list(points), k)
+    for point in random_points:
+        centroids.append(point)
 
-        # genereaza punct
-        valori_X = np.random.normal(zona["x"], zona["sigma_x"], 1)
-        valori_Y = np.random.normal(zona["y"], zona["sigma_y"], 1)
+    for i in range(max_iter):
+        classes = {}
+        for j in range(k):
+            classes[j] = []
 
-        puncte.append((valori_X[0], valori_Y[0], zona["color"]))
-        i = i + 1
-
-        # accepta puncte noise
-        if np.random.rand() < prag:
-            noise_X = np.random.uniform(-300, 300)
-            noise_Y = np.random.uniform(-300, 300)
-            puncte.append((noise_X, noise_Y, zona["color"]))
-            i = i + 1
-
-    return puncte
-
-
-def salvareFisier(points, filename):
-    with open(filename, "w") as file:
+        # Assign points to nearest centroid
         for point in points:
-            file.write(f"{point[0]} {point[1]} {point[2]}\n")
+            distances = [np.linalg.norm(point - centroid) for centroid in centroids]
+            nearest_centroid = distances.index(min(distances))
+            classes[nearest_centroid].append(point)
+
+        # Save old centroids for convergence check
+        old_centroids = centroids.copy()
+
+        # Calculate new centroids
+        for j in range(k):
+            centroids[j] = np.average(classes[j], axis=0)
+
+        # Plot points and Centroid
+        colors = 10 * ['r', 'g', 'b', 'c', 'k', 'y', 'm']
+        for j in range(k):
+            color = colors[j]
+            features = np.array(classes[j])
+            plt.scatter(features[:, 0], features[:, 1], color=color, s=1)
+            plt.scatter(centroids[j][0], centroids[j][1], s=300, c="black")
+
+        plt.show()
+        if i < max_iter - 1:
+            plt.pause(1)  # Pause for 2 seconds
+            plt.clf()  # Clear the figure for the next plot
+
+        plt.show()
+
+        # Check if we have converged
+        isOptimal = True
+
+        for j in range(k):
+            original_centroid = old_centroids[j]
+            current_centroid = centroids[j]
+
+            if np.sum((current_centroid - original_centroid) / original_centroid * 100.0) > tol:
+                isOptimal = False
+
+                # If centroids don't change significantly, we can stop
+        if isOptimal:
+            break
+
+    return centroids, classes
 
 
-def genereazaPlot(filename):
-    data = np.loadtxt(filename, dtype={'names': ('x', 'y', 'color'), 'formats': ('f8', 'f8', 'U10')})
-    x = data['x']
-    y = data['y']
-    colors = data['color']
+def main():
+    df = pd.read_csv('points.txt', sep=' ', header=None)
+    df[[0, 1]] = df[[0, 1]].apply(pd.to_numeric, errors='coerce')
+    df = df.dropna()
+    points = df[[0, 1]].to_numpy()
 
-    for zona in zones:
-        plt.scatter(x[colors == zona["color"]], y[colors == zona["color"]], color=zona["color"], s=1, marker=',')
+    k = random.randint(2, 10)  # Define number of clusters
+    tol = 0.001  # Define tolerance
+    max_iter = 10  # Define maximum iterations
+
+    print(f"Centroids: ${k}")
+
+    centroids, classes = k_means(points, k, tol, max_iter)  # Run k-means
+
+    cost = 0
+    for centroid_index in classes:
+        for point in classes[centroid_index]:
+            cost += np.linalg.norm(centroids[centroid_index] - point)
+
+    print('Cost of the model:', cost)
 
 
-points = genereaza_puncte(10000)
-salvareFisier(points, "points.txt")
-genereazaPlot("points.txt")
-
-plt.axvline(0, c='black', ls='-')
-plt.axhline(0, c='black', ls='-')
-plt.xlim([-300, 300])
-plt.ylim([-300, 300])
-plt.show()
+if __name__ == "__main__":
+    main()
