@@ -39,6 +39,8 @@ def k_means(points, k, tol, max_iter):
             plt.scatter(features[:, 0], features[:, 1], color=color, s=1)
             plt.scatter(centroids[j][0], centroids[j][1], s=100, c="black")
 
+        plt.xlim([-300, 300])
+        plt.ylim([-300, 300])
         plt.show()
 
         isOptimal = True
