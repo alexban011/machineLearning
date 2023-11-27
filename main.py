@@ -67,9 +67,9 @@ def main():
     tol = 2
     max_iter = 100
 
-    print(f"Centroids: ${k}")
+    print(f"Centroids: {k}")
 
-    print(f"Iterations: ${k_means(points, k, tol, max_iter)}")
+    print(f"Iterations: {k_means(points, k, tol, max_iter)}")
 
 if __name__ == "__main__":
     main()
