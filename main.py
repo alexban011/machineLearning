@@ -64,7 +64,7 @@ def main():
     points = df[[0, 1]].to_numpy()
 
     k = random.randint(2, 10)
-    tol = 2
+    tol = 0.2
     max_iter = 100
 
     print(f"Centroids: {k}")
