@@ -9,7 +9,7 @@ zones = [
 
 np.random.seed(None)
 
-prag = 0.05
+prag = 0.01
 
 
 def genereaza_puncte(nr_de_puncte):
