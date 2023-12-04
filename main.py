@@ -1,62 +1,65 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
 
-zones = [
-    {"x": -150, "y": 150, "sigma_x": 30, "sigma_y": 10, "color": "red"},
-    {"x": 0, "y": 0, "sigma_x": 30, "sigma_y": 50, "color": "blue"},
-    {"x": 200, "y": -150, "sigma_x": 50, "sigma_y": 20, "color": "yellow"}
-]
+# Load data
+data = []
+with open("points.txt", "r") as f:
+    for line in f:
+        x, y, _ = line.split()
+        data.append([float(x), float(y)])
+data = np.array(data)
 
-np.random.seed(None)
+# Initialize neurons in a grid
+x = np.linspace(-300, 300, 10)
+y = np.linspace(-300, 300, 10)
+neurons = np.array([[np.array([i, j]) for i in x] for j in y])
 
-prag = 0.01
+num_iterations = 100
+current_iteration = 0
 
+fig, ax = plt.subplots()
+plt.subplots_adjust(bottom=0.2)
 
-def genereaza_puncte(nr_de_puncte):
-    puncte = []
+def update_plot():
+    global current_iteration, neurons
 
-    for i in range(nr_de_puncte):
-        zona = np.random.choice(zones)
+    if current_iteration >= num_iterations:
+        return
 
-        # genereaza punct
-        valori_X = np.random.normal(zona["x"], zona["sigma_x"], 1)
-        valori_Y = np.random.normal(zona["y"], zona["sigma_y"], 1)
+    ax.clear()
+    ax.set_xlim(-300, 300)
+    ax.set_ylim(-300, 300)
+    ax.scatter(data[:, 0], data[:, 1], color='black', s=1)
 
-        puncte.append((valori_X[0], valori_Y[0], zona["color"]))
-        i = i + 1
+    for i in range(neurons.shape[0]):
+        for j in range(neurons.shape[1]):
+            neuron = neurons[i, j]
+            ax.plot(neuron[0], neuron[1], 'bo')
+            if i > 0:
+                ax.plot([neuron[0], neurons[i - 1, j, 0]], [neuron[1], neurons[i - 1, j, 1]], 'b')
+            if j > 0:
+                ax.plot([neuron[0], neurons[i, j - 1, 0]], [neuron[1], neurons[i, j - 1, 1]], 'b')
 
-        # accepta puncte noise
-        if np.random.rand() < prag:
-            noise_X = np.random.uniform(-300, 300)
-            noise_Y = np.random.uniform(-300, 300)
-            puncte.append((noise_X, noise_Y, zona["color"]))
-            i = i + 1
+    fig.canvas.draw()
 
-    return puncte
+    # Train for one iteration
+    for point in data:
+        diff = neurons - point
+        distances = np.linalg.norm(diff, axis=2)
+        BMU = np.unravel_index(np.argmin(distances, axis=None), distances.shape)
+        delta = 0.2 * (point - neurons[BMU])
+        neurons[BMU] += delta
+        for i in range(max(0, BMU[0] - 1), min(neurons.shape[0], BMU[0] + 2)):
+            for j in range(max(0, BMU[1] - 1), min(neurons.shape[1], BMU[1] + 2)):
+                if (i, j) != BMU:
+                    neurons[i, j] += delta * 0.5
 
+    current_iteration += 1
 
-def salvareFisier(points, filename):
-    with open(filename, "w") as file:
-        for point in points:
-            file.write(f"{point[0]} {point[1]} {point[2]}\n")
+# Add button for next iteration
+next_ax = plt.axes([0.8, 0.05, 0.1, 0.075])
+next_button = Button(next_ax, 'Next')
+next_button.on_clicked(lambda event: update_plot())
 
-
-def genereazaPlot(filename):
-    data = np.loadtxt(filename, dtype={'names': ('x', 'y', 'color'), 'formats': ('f8', 'f8', 'U10')})
-    x = data['x']
-    y = data['y']
-    colors = data['color']
-
-    for zona in zones:
-        plt.scatter(x[colors == zona["color"]], y[colors == zona["color"]], color=zona["color"], s=1, marker=',')
-
-
-points = genereaza_puncte(10000)
-salvareFisier(points, "points.txt")
-genereazaPlot("points.txt")
-
-plt.axvline(0, c='black', ls='-')
-plt.axhline(0, c='black', ls='-')
-plt.xlim([-300, 300])
-plt.ylim([-300, 300])
 plt.show()
