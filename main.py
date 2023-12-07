@@ -28,8 +28,8 @@ def update_plot():
         return
 
     ax.clear()
-    ax.set_xlim(-300, 300)
-    ax.set_ylim(-300, 300)
+    ax.set_xlim(-400, 400)
+    ax.set_ylim(-400, 400)
     ax.scatter(data[:, 0], data[:, 1], color='black', s=1)
 
     for i in range(neurons.shape[0]):
