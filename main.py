@@ -1,65 +1,47 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Button
 
-# Load data
-data = []
-with open("points.txt", "r") as f:
-    for line in f:
-        x, y, _ = line.split()
-        data.append([float(x), float(y)])
-data = np.array(data)
-
-# Initialize neurons in a grid
+grid_size = 10
 x = np.linspace(-300, 300, 10)
 y = np.linspace(-300, 300, 10)
 neurons = np.array([[np.array([i, j]) for i in x] for j in y])
 
-num_iterations = 100
-current_iteration = 0
+learning_rate = 1
+
+with open("points.txt", 'r') as f:
+ points = [list(map(float, line.strip().split()[:2])) for line in f]
+
+iterations = len(points)
 
 fig, ax = plt.subplots()
-plt.subplots_adjust(bottom=0.2)
+ax.set_xlim(-300, 300)
+ax.set_ylim(-300, 300)
 
-def update_plot():
-    global current_iteration, neurons
+for i in range(iterations):
+ x = np.array(points[i])
 
-    if current_iteration >= num_iterations:
-        return
+ distances = np.linalg.norm(neurons - x, axis=2)
 
-    ax.clear()
-    ax.set_xlim(-400, 400)
-    ax.set_ylim(-400, 400)
-    ax.scatter(data[:, 0], data[:, 1], color='black', s=1)
+ bmu_index = np.unravel_index(np.argmin(distances), distances.shape)
 
-    for i in range(neurons.shape[0]):
-        for j in range(neurons.shape[1]):
-            neuron = neurons[i, j]
-            ax.plot(neuron[0], neuron[1], 'bo')
-            if i > 0:
-                ax.plot([neuron[0], neurons[i - 1, j, 0]], [neuron[1], neurons[i - 1, j, 1]], 'b')
-            if j > 0:
-                ax.plot([neuron[0], neurons[i, j - 1, 0]], [neuron[1], neurons[i, j - 1, 1]], 'b')
+ for i in range(max(0, bmu_index[0] - 1), min(grid_size, bmu_index[0] + 2)):
+    for j in range(max(0, bmu_index[1] - 1), min(grid_size, bmu_index[1] + 2)):
+        neurons[i, j] += learning_rate * (x - neurons[i, j])
 
-    fig.canvas.draw()
+ learning_rate *= 0.99
 
-    # Train for one iteration
-    for point in data:
-        diff = neurons - point
-        distances = np.linalg.norm(diff, axis=2)
-        BMU = np.unravel_index(np.argmin(distances, axis=None), distances.shape)
-        delta = 0.2 * (point - neurons[BMU])
-        neurons[BMU] += delta
-        for i in range(max(0, BMU[0] - 1), min(neurons.shape[0], BMU[0] + 2)):
-            for j in range(max(0, BMU[1] - 1), min(neurons.shape[1], BMU[1] + 2)):
-                if (i, j) != BMU:
-                    neurons[i, j] += delta * 0.5
-
-    current_iteration += 1
-
-# Add button for next iteration
-next_ax = plt.axes([0.8, 0.05, 0.1, 0.075])
-next_button = Button(next_ax, 'Next')
-next_button.on_clicked(lambda event: update_plot())
+ ax.clear()
+ ax.scatter(neurons[:, :, 0], neurons[:, :, 1], s=10)
+ ax.scatter(x[0], x[1], c='blue')
+ ax.set_xlim(-300, 300)
+ ax.set_ylim(-300, 300)
+ for i in range(grid_size):
+    for j in range(grid_size):
+        if i < grid_size - 1:
+            ax.plot([neurons[i, j, 0], neurons[i + 1, j, 0]], [neurons[i, j, 1], neurons[i + 1, j, 1]], 'k-')
+        if j < grid_size - 1:
+            ax.plot([neurons[i, j, 0], neurons[i, j + 1, 0]], [neurons[i, j, 1], neurons[i, j + 1, 1]], 'k-')
+ plt.draw()
+ plt.pause(0.01)
 
 plt.show()
